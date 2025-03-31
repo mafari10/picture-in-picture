@@ -1,12 +1,12 @@
 const CACHE_NAME = "pip-cache-v1";
 const ASSETS_TO_CACHE = [
   "/",
-  "/index.html",
-  "/assets/css/styles.css",
-  "/js/script.js",
-  "/favicon.ico",
-  "/assets/icons/icon-192x192.png",
-  "/assets/icons/icon-512x512.png",
+  "./index.html",
+  "./assets/css/styles.css",
+  "./js/script.js",
+  "./favicon.ico",
+  "./assets/icons/icon-192x192.png",
+  "./assets/icons/icon-512x512.png",
 ];
 
 self.addEventListener("install", (event) => {
