@@ -70,16 +70,24 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/mafari10/sw.js", {
-        scope: "/mafari10",
+        scope: "/mafari10/", // Added trailing slash here
       })
       .then((registration) => {
         console.log(
-          "ServiceWorker registration successful",
+          "ServiceWorker registration successful with scope:",
           registration.scope
         );
+
+        // Optional: Check for updates periodically
+        setInterval(() => {
+          registration.update().catch((err) => {
+            console.log("SW update check failed:", err);
+          });
+        }, 60 * 60 * 1000); // Check every hour
       })
       .catch((err) => {
-        console.log("ServiceWorker registration failed: ", err);
+        console.error("ServiceWorker registration failed:", err);
+        // Fallback behavior when SW isn't available
       });
   });
 }
