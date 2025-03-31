@@ -1,14 +1,18 @@
-const CACHE_NAME = "pip-cache-v2"; // Changed version to force update
+const CACHE_NAME = "pip-cache-v4"; // Updated version
+const BASE_PATH = self.location.hostname.includes("github.io")
+  ? "/mafari10"
+  : "";
+
 const ASSETS_TO_CACHE = [
-  "/mafari10/",
-  "/mafari10/index.html",
-  "/mafari10/js/script.js",
-  "/mafari10/assets/css/styles.css",
-  "/mafari10/favicon.ico",
-  "/mafari10/assets/icons/icon-192x192.png",
-  "/mafari10/assets/icons/icon-512x512.png",
-  "/mafari10/manifest.json",
-];
+  "/",
+  "/index.html",
+  "/js/script.js",
+  "/assets/css/styles.css",
+  "/favicon.ico",
+  "/assets/icons/icon-192x192.png",
+  "/assets/icons/icon-512x512.png",
+  "/manifest.json",
+].map((path) => BASE_PATH + path);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -17,24 +21,40 @@ self.addEventListener("install", (event) => {
       return Promise.all(
         ASSETS_TO_CACHE.map((url) => {
           return cache
-            .add(new Request(url, { cache: "reload" }))
+            .add(
+              new Request(url, {
+                cache: "reload",
+                credentials: "same-origin",
+              })
+            )
             .catch((err) => {
               console.error(`Failed to cache ${url}:`, err);
-              // Continue even if some files fail to cache
-              return Promise.resolve();
+              return Promise.resolve(); // Continue despite failures
             });
         })
       );
     })
   );
+  // Force the waiting service worker to become active
+  self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET requests and chrome-extension requests
+  // Skip non-GET requests and extension requests
   if (
     event.request.method !== "GET" ||
     event.request.url.startsWith("chrome-extension://")
   ) {
+    return;
+  }
+
+  // Handle navigation requests specially
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      caches.match(BASE_PATH + "/index.html").then((response) => {
+        return response || fetch(event.request);
+      })
+    );
     return;
   }
 
@@ -46,20 +66,37 @@ self.addEventListener("fetch", (event) => {
       }
 
       // Otherwise fetch from network
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type !== "basic") {
+      return fetch(event.request)
+        .then((response) => {
+          // Only cache successful, same-origin responses
+          if (
+            !response ||
+            response.status !== 200 ||
+            response.type !== "basic" ||
+            !response.url.startsWith(self.location.origin)
+          ) {
+            return response;
+          }
+
+          // Clone the response for caching
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
           return response;
-        }
-
-        // Clone the response for caching
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch(() => {
+          // Fallback for failed requests
+          if (event.request.destination === "image") {
+            return caches.match(BASE_PATH + "/assets/icons/icon-512x512.png");
+          }
+          return new Response("Offline fallback page", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: new Headers({ "Content-Type": "text/plain" }),
+          });
         });
-
-        return response;
-      });
     })
   );
 });
@@ -84,7 +121,9 @@ self.addEventListener("activate", (event) => {
           return self.registration.navigationPreload.enable();
         }
       })
+      .then(() => {
+        // Claim all clients immediately
+        return self.clients.claim();
+      })
   );
-  // Tell the active service worker to take control immediately
-  self.clients.claim();
 });

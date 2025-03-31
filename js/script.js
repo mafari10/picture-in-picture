@@ -66,28 +66,29 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Service Worker Registration
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/mafari10/sw.js", {
-        scope: "/mafari10/", // Added trailing slash here
-      })
-      .then((registration) => {
-        console.log(
-          "ServiceWorker registration successful with scope:",
-          registration.scope
-        );
+// Wait for DOM to load before accessing elements
+document.addEventListener("DOMContentLoaded", () => {
+  // Your existing PWA installation and PiP code
 
-        // Optional: Check for updates periodically
-        setInterval(() => {
-          registration.update().catch((err) => {
-            console.log("SW update check failed:", err);
-          });
-        }, 60 * 60 * 1000); // Check every hour
+  // Enhanced service worker registration
+  if ("serviceWorker" in navigator) {
+    const swUrl = window.location.hostname.includes("github.io")
+      ? "/mafari10/sw.js"
+      : "/sw.js";
+
+    const scope = window.location.hostname.includes("github.io")
+      ? "/mafari10/"
+      : "/";
+
+    navigator.serviceWorker
+      .register(swUrl, { scope })
+      .then((registration) => {
+        console.log("SW registered for scope:", registration.scope);
+        // Optional: Check for updates every hour
+        setInterval(() => registration.update(), 60 * 60 * 1000);
       })
       .catch((err) => {
-        console.error("ServiceWorker registration failed:", err);
-        // Fallback behavior when SW isn't available
+        console.error("SW registration failed:", err);
       });
-  });
-}
+  }
+});
