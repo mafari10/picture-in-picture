@@ -1,13 +1,12 @@
 const CACHE_NAME = "pip-cache-v1";
 const ASSETS_TO_CACHE = [
-  "/mafari10/",
-  "/mafari10/index.html",
-  "/mafari10/js/script.js",
-  "/mafari10/assets/css/styles.css",
-  "/mafari10/favicon.ico",
-  "/mafari10/assets/icons/icon-192x192.png",
-  "/mafari10/assets/icons/icon-512x512.png",
-  "/mafari10/manifest.json",
+  "/",
+  "/index.html",
+  "/assets/css/styles.css",
+  "/js/script.js",
+  "/favicon.ico",
+  "/assets/icons/icon-192x192.png",
+  "/assets/icons/icon-512x512.png",
 ];
 
 self.addEventListener("install", (event) => {
