@@ -142,7 +142,6 @@ li::before {
 video {
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  display: block;
   margin: 2rem auto;
   background: var(--dark-color);
 }
