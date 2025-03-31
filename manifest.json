@@ -2,7 +2,7 @@
   "name": "Picture in Picture",
   "short_name": "PiP",
   "description": "Picture-in-Picture mode for your screen",
-  "start_url": "/mafari10/picture-in-picture",
+  "start_url": "/mafari10/picture-in-picture/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
