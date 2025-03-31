@@ -1,48 +1,80 @@
-const CACHE_NAME = "pip-cache-v1";
-const ASSETS_TO_CACHE = [
-  '/mafari10/',
-  '/mafari10/index.html',
-  '/mafari10/assets/css/styles.css',
-  '/mafari10/js/script.js',
-  '/mafari10/favicon.ico',
-  '/mafari10/manifest.json'
-];
+// Wait for DOM to load before accessing elements
+document.addEventListener("DOMContentLoaded", () => {
+  // PWA Installation Handling
+  let deferredPrompt;
+  const installButton = document.getElementById("installButton");
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
-      // Cache each file individually to prevent complete failure if one fails
-      return Promise.all(
-        ASSETS_TO_CACHE.map((url) => {
-          return cache.add(url).catch((err) => {
-            console.log(`Failed to cache ${url}:`, err);
-          });
-        })
-      );
-    })
-  );
+  // Only proceed if elements exist
+  if (installButton) {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installButton.style.display = "block";
+    });
+
+    installButton.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      installButton.style.display = "none";
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+      deferredPrompt = null;
+    });
+  }
+
+  window.addEventListener("appinstalled", () => {
+    if (installButton) installButton.style.display = "none";
+    console.log("PWA was installed");
+  });
+
+  // Your existing Picture-in-Picture code
+  let hasStarted = false;
+  const video = document.getElementById("video");
+  const button = document.getElementById("button");
+
+  async function selectMediaStream() {
+    try {
+      hasStarted = true;
+      const captureStream = await navigator.mediaDevices.getDisplayMedia();
+      video.srcObject = captureStream;
+      video.onloadedmetadata = () => {
+        video.play();
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function pictureInpicture() {
+    try {
+      if (hasStarted && document.pictureInPictureElement !== video) {
+        button.disabled = true;
+        await video.requestPictureInPicture();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  if (button) {
+    button.addEventListener("click", pictureInpicture);
+  }
+
+  selectMediaStream();
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (!cacheWhitelist.includes(cacheName)) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
+// Service Worker Registration
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("ServiceWorker registration successful");
+      })
+      .catch((err) => {
+        console.log("ServiceWorker registration failed: ", err);
+      });
+  });
+}
