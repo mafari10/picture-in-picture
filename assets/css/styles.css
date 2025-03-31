@@ -38,3 +38,41 @@ h1 {
 .start {
   color: rgb(237, 233, 239);
 }
+
+/* Install Button Styles */
+#installButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#installButton:hover {
+  background: #3367d6;
+}
+
+/* iOS Install Instructions */
+.install-instructions {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+  border-left: 4px solid #4285f4;
+}
+
+.install-instructions img.share-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.hidden {
+  display: none;
+}
